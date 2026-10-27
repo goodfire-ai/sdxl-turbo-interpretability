@@ -47,7 +47,7 @@ class BatchTopKSAE(torch.nn.Module):
     
     def _batch_topk(self, f, k, tiebreak=False):
         if tiebreak:  # break ties in feature order for determinism
-            f += self.tiebreaker.broadcast_to(f)
+            f = f + self.tiebreaker.to(f.device, f.dtype).broadcast_to(f.shape)
         *input_shape, _ = f.shape  # handle higher-dim tensors (e.g. from sequence input)
         numel = k * prod(input_shape)
         f_topk = torch.topk(f.flatten(), numel, dim=-1)
@@ -58,7 +58,6 @@ class BatchTopKSAE(torch.nn.Module):
         return self.decoder(f)
 
     def forward(self, x):
-        x = x * self.norm_constant
         f = self.encode(x)
         return self.decode(f), f
 
